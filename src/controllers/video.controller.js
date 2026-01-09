@@ -124,19 +124,21 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   // Send successful response with videos and pagination info
   return res.status(200).json(
-    200,
-    {
-      videos: videos,
-      pagination: {
-        totalVideos,
-        totalPages,
-        currentPage: pageNumber,
-        limitNumber: limitNumber,
-        hasNextPage: pageNumber < totalPages ? true : false,
-        hasPrevPage: pageNumber > 1 ? true : false,
+    new ApiResponse(
+      200,
+      {
+        videos,
+        pagination: {
+          totalVideos,
+          totalPages,
+          currentPage: pageNumber,
+          limitNumber,
+          hasNextPage: pageNumber < totalPages,
+          hasPrevPage: pageNumber > 1,
+        },
       },
-    },
-    "Videos fetched successfully"
+      "Videos fetched successfully"
+    )
   );
 });
 
@@ -209,7 +211,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     // Select only specific fields to return. This limits the data sent to the client (better performance & security). Not sending unnecessary fields like internal timestamps, etc.
     .select(
-      "videoFile thumbnail title description duration views isPublished owner"
+      "videoFile thumbnail title description duration views isPublished owner createdAt"
     );
 
   if (!video) {
