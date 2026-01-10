@@ -9,6 +9,7 @@ import {
   uploadOnCloudinary,
 } from "../utils/cloudinary.js";
 import { validateMongoId } from "../utils/validateMongoId.js";
+import { Like } from "../models/like.model.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   //TODO: get all videos based on query, sort, pagination
@@ -185,7 +186,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, video, "Video published successfully"));
 });
 
-const getVideoById = asyncHandler(async (req, res) => {
+/* const getVideoById = asyncHandler(async (req, res) => {
   //TODO: get video by id
   const { videoId } = req.params; // Extract videoId from URL parameters (e.g., /videos/:videoId)
 
@@ -211,7 +212,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     // Select only specific fields to return. This limits the data sent to the client (better performance & security). Not sending unnecessary fields like internal timestamps, etc.
     .select(
-      "videoFile thumbnail title description duration views isPublished owner createdAt"
+      "videoFile thumbnail title description duration views isPublished owner createdAt likes"
     );
 
   if (!video) {
@@ -227,6 +228,32 @@ const getVideoById = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, video, "Video fetched successfuly"));
+}); */
+
+const getVideoById = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  validateMongoId(videoId, "Video ID");
+
+  const video = await Video.findOneAndUpdate(
+    { _id: videoId, isPublished: true },
+    { $inc: { views: 1 } },
+    { new: true }
+  )
+    .populate("owner", "fullName username avatar")
+    .lean(); // 👈 IMPORTANT
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  // ✅ CALCULATE LIKES HERE (SOURCE OF TRUTH)
+  const likesCount = await Like.countDocuments({ video: videoId });
+  video.likes = likesCount;
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, "Video fetched successfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
