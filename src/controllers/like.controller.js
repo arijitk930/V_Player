@@ -113,7 +113,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   }
 
   const existingLike = await Like.findOne({
-    comment: tweetId,
+    tweet: tweetId,
     likedBy: req.user?._id,
   });
 
@@ -136,7 +136,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   }
 
   const like = await Like.create({
-    comment: tweetId,
+    tweet: tweetId,
     likedBy: req.user?._id,
   });
 
@@ -167,7 +167,9 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     });
 
   if (likedVideos.length === 0) {
-    throw new ApiError(404, "No liked videos found");
+    return res
+      .status(200)
+      .json(new ApiResponse(200, likedVideos, "No liked videos found"));
   }
 
   return res
