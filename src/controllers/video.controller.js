@@ -303,8 +303,8 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
   await Video.findByIdAndDelete(videoId);
 
-  await deleteFromCloudinary(videoFilePublicId);
-  await deleteFromCloudinary(thumbnailPublicId);
+  await deleteFromCloudinary(video.videoFilePublicId);
+  await deleteFromCloudinary(video.thumbnailPublicId);
 
   return res
     .status(200)
