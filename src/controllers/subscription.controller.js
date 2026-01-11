@@ -12,10 +12,18 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 
   validateMongoId(channelId, "Channel ID");
 
-  const channel = User.exists({ _id: channelId });
+  if (req.user._id.equals(channelId)) {
+    throw new ApiError(400, "You cannot subscribe to yourself");
+  }
+
+  const channel = await User.exists({ _id: channelId });
 
   if (!channel) {
     throw new ApiError(404, "Channel not found");
+  }
+
+  if (req.user._id.equals(channelId)) {
+    throw new ApiError(400, "You cannot subscribe to yourself");
   }
 
   const existingSubscription = await Subscription.findOne({
@@ -85,7 +93,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Not authorised to view this user's subscriptions");
   }
 
-  const subscriptions = await Subscription.find({ subscriber: _id })
+  const subscriptions = await Subscription.find({ subscriber: subscriberId })
     .populate("channel", "username fullName avatar")
     .sort({ createdAt: -1 });
 
@@ -101,4 +109,31 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
   );
 });
 
-export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
+// check if current user is subscribed to a channel
+const isSubscribed = asyncHandler(async (req, res) => {
+  const { channelId } = req.params;
+
+  validateMongoId(channelId, "Channel ID");
+
+  const subscribed = await Subscription.exists({
+    subscriber: req.user._id,
+    channel: channelId,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { isSubscribed: !!subscribed },
+        "Subscription status fetched"
+      )
+    );
+});
+
+export {
+  toggleSubscription,
+  getUserChannelSubscribers,
+  getSubscribedChannels,
+  isSubscribed,
+};
