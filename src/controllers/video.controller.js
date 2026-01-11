@@ -191,9 +191,17 @@ const incrementVideoView = asyncHandler(async (req, res) => {
 
   validateMongoId(videoId, "Video ID");
 
+  // 1️⃣ Increment views
   await Video.findByIdAndUpdate(videoId, {
     $inc: { views: 1 },
   });
+
+  // 2️⃣ Add to watch history (ONLY if logged in)
+  if (req.user) {
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { watchHistory: videoId },
+    });
+  }
 
   return res.status(200).json(new ApiResponse(200, {}, "View incremented"));
 });

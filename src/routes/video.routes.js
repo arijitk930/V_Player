@@ -22,7 +22,7 @@ const router = Router();
 router.route("/").get(getAllVideos);
 
 // Watch video (public)
-router.post("/:videoId/view", incrementVideoView);
+router.post("/:videoId/view", optionalAuth, incrementVideoView);
 router.route("/:videoId").get(optionalAuth, getVideoById);
 
 /* =======================
