@@ -40,8 +40,8 @@ const getUserTweets = asyncHandler(async (req, res) => {
     throw new ApiError(404, "user not found");
   }
 
-  const tweets = await (await Tweet.find({ owner: userId }))
-    .toSorted({ createdAt: -1 })
+  const tweets = await Tweet.find({ owner: userId })
+    .sort({ createdAt: -1 })
     .populate("owner", "username avatar");
 
   if (tweets.length === 0) {
