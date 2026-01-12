@@ -40,10 +40,9 @@ const getUserTweets = asyncHandler(async (req, res) => {
     throw new ApiError(404, "user not found");
   }
 
-  const tweets = await Tweet.find({ owner: userId }).populate(
-    "owner",
-    "username avatar"
-  );
+  const tweets = await (await Tweet.find({ owner: userId }))
+    .toSorted({ createdAt: -1 })
+    .populate("owner", "username avatar");
 
   if (tweets.length === 0) {
     return res
@@ -53,7 +52,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, tweets, "Twweets fetched successfully"));
+    .json(new ApiResponse(200, tweets, "Tweets fetched successfully"));
 });
 
 const updateTweet = asyncHandler(async (req, res) => {
@@ -92,7 +91,7 @@ const updateTweet = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, updateTweet, "Tweet updated successfully"));
+    .json(new ApiResponse(200, updatedTweet, "Tweet updated successfully"));
 });
 
 const deleteTweet = asyncHandler(async (req, res) => {
