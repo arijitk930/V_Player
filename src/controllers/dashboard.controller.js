@@ -65,7 +65,6 @@ const getChannelStats = asyncHandler(async (req, res) => {
 const getChannelVideos = asyncHandler(async (req, res) => {
   // TODO: Get all the videos uploaded by the channel
   const { page = 1, limit = 10, sortType = "desc" } = req.query;
-
   const pageNumber = parseInt(page, 10);
   const limitNumber = parseInt(limit, 10);
 
@@ -88,6 +87,21 @@ const getChannelVideos = asyncHandler(async (req, res) => {
       $match: { owner: new mongoose.Types.ObjectId(req.user?._id) },
     },
     {
+      // Stage: Join with 'likes' collection to get all likes for each video
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likesArray",
+      },
+    },
+    {
+      // Stage: Add likes count field
+      $addFields: {
+        likes: { $size: "$likesArray" },
+      },
+    },
+    {
       $sort: { createdAt: sortDirection },
     },
     {
@@ -96,6 +110,7 @@ const getChannelVideos = asyncHandler(async (req, res) => {
         thumbnailPublicId: 0,
         description: 0,
         owner: 0,
+        likesArray: 0, // Remove the temporary likesArray field
       },
     },
   ];
